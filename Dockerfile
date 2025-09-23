@@ -1,32 +1,33 @@
-FROM python:3.11-slim
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Evita bytecode e flush imediato de logs
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+# Instalar dependências do sistema
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata
 
-# Dependências do sistema
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates tzdata \
-    && rm -rf /var/lib/apt/lists/*
+# Copiar package.json e instalar dependências
+COPY package*.json ./
+RUN npm ci --only=production
 
-# Copia requirements e instala dependências
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copia o código da aplicação
+# Copiar código da aplicação
 COPY . .
 
-# Pasta para sessão do Telethon
+# Criar pasta de sessão
 RUN mkdir -p /app/session
 
 # Usuário não-root para segurança
-RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser:appuser /app
-USER appuser
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
+USER nodejs
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)"
+    CMD node -e "console.log('OK')" || exit 1
 
-CMD ["python", "main.py"]
+# Expor porta (opcional)
+EXPOSE 3000
+
+CMD ["npm", "start"]

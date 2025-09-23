@@ -1,6 +1,6 @@
-# Telegram → n8n Webhook Bridge (Telethon)
+# Telegram → n8n Webhook Bridge (Node.js)
 
-Aplicação simples em Python usando **Telethon** para receber mensagens do Telegram
+Aplicação simples em Node.js usando **Telegram API** para receber mensagens do Telegram
 e reenviar para um **webhook do n8n**.
 
 ## 🚀 Deploy Rápido no EasyPanel
@@ -51,7 +51,7 @@ docker run --name tg-bridge --env-file .env -v $(pwd)/session:/app/session teleg
 ```
 
 ## 📋 Pré‑requisitos
-- Python 3.10+ (ou use o Nixpacks no EasyPanel)
+- Node.js 18+ (ou use o Nixpacks no EasyPanel)
 - Uma conta no Telegram e **api_id** / **api_hash** em https://my.telegram.org
 - **Opcional:** um **bot token** (crie com o @BotFather)
 - URL do seu webhook no n8n
