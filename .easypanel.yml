@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  telegram-alert:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - ALLOW_CHATS=${ALLOW_CHATS}
+      - FORWARD_MEDIA=${FORWARD_MEDIA}
+    volumes:
+      - telegram_session:/app/session
+
+volumes:
+  telegram_session:
