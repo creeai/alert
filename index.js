@@ -146,7 +146,7 @@ client.addEventHandler(async (event) => {
   } catch (error) {
     console.error('❌ Erro ao processar mensagem:', error.message);
   }
-}, new Api.NewMessage({}));
+}, new Api.UpdateNewMessage({}));
 
 // Função principal
 async function start() {
