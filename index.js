@@ -1,4 +1,5 @@
-const { TelegramApi } = require('telegram');
+const { Api, TelegramClient } = require('telegram');
+const { StringSession } = require('telegram/sessions');
 const axios = require('axios');
 const FormData = require('form-data');
 const fs = require('fs');
@@ -35,11 +36,12 @@ if (!fs.existsSync(sessionDir)) {
 }
 
 // Inicializar cliente Telegram
-const client = new TelegramApi({
-  apiId: API_ID,
-  apiHash: API_HASH,
-  session: path.join(sessionDir, 'tg.session')
-});
+const client = new TelegramClient(
+  new StringSession(''), // Sessão vazia para começar
+  API_ID,
+  API_HASH,
+  { connectionRetries: 5 }
+);
 
 // Função para verificar se chat é permitido
 function chatAllowed(chatId) {
@@ -90,22 +92,25 @@ async function downloadMedia(message) {
 }
 
 // Handler para mensagens
-client.on('message', async (message) => {
+client.addEventHandler(async (event) => {
   try {
+    const message = event.message;
+    if (!message) return;
+    
     const chat = await message.getChat();
     const sender = await message.getSender();
     
-    const chatId = chat.id;
+    const chatId = chat.id?.toString();
     const chatType = chat.constructor.name.toLowerCase();
-    const senderId = sender?.id;
+    const senderId = sender?.id?.toString();
     const senderUsername = sender?.username;
     
-    if (!chatAllowed(chatId)) {
+    if (!chatAllowed(parseInt(chatId))) {
       return; // filtrado
     }
     
-    const text = message.text || null;
-    const date = message.date.toISOString();
+    const text = message.message || null;
+    const date = new Date(message.date * 1000).toISOString();
     
     const basePayload = {
       message_id: message.id,
@@ -117,7 +122,7 @@ client.on('message', async (message) => {
       text: text,
       has_media: !!message.media,
       raw: {
-        reply_to_msg_id: message.replyToMsgId,
+        reply_to_msg_id: message.replyTo?.replyToMsgId,
         fwd_from: !!message.fwdFrom,
         via_bot_id: message.viaBotId,
         entities: message.entities || []
@@ -141,7 +146,7 @@ client.on('message', async (message) => {
   } catch (error) {
     console.error('❌ Erro ao processar mensagem:', error.message);
   }
-});
+}, new Api.NewMessage({}));
 
 // Função principal
 async function start() {
@@ -149,10 +154,26 @@ async function start() {
     console.log('🚀 Iniciando Telegram n8n Bridge...');
     
     if (BOT_TOKEN) {
-      await client.start({ botAuthToken: BOT_TOKEN });
+      await client.start({
+        botAuthToken: BOT_TOKEN
+      });
       console.log('🤖 Rodando como BOT');
     } else {
-      await client.start();
+      await client.start({
+        phoneNumber: async () => {
+          console.log('📱 Por favor, insira seu número de telefone:');
+          return process.stdin.read();
+        },
+        password: async () => {
+          console.log('🔐 Por favor, insira sua senha 2FA:');
+          return process.stdin.read();
+        },
+        phoneCode: async () => {
+          console.log('📱 Por favor, insira o código de verificação:');
+          return process.stdin.read();
+        },
+        onError: (err) => console.log('❌ Erro:', err)
+      });
       console.log('👤 Rodando como CONTA DE USUÁRIO');
     }
     
