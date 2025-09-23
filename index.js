@@ -29,6 +29,13 @@ if (!API_ID || !API_HASH || !N8N_WEBHOOK_URL) {
   process.exit(1);
 }
 
+// OBRIGATÓRIO: Bot Token para funcionar no EasyPanel
+if (!BOT_TOKEN) {
+  console.error('❌ TELEGRAM_BOT_TOKEN é OBRIGATÓRIO para funcionar no EasyPanel');
+  console.error('💡 Crie um bot com @BotFather e configure o token');
+  process.exit(1);
+}
+
 // Criar pasta de sessão
 const sessionDir = path.join(__dirname, 'session');
 if (!fs.existsSync(sessionDir)) {
@@ -95,32 +102,14 @@ async function downloadMedia(message) {
 async function start() {
   try {
     console.log('🚀 Iniciando Telegram n8n Bridge...');
+    console.log('🤖 Modo BOT (recomendado para EasyPanel)');
     
-    if (BOT_TOKEN) {
-      await client.start({
-        botAuthToken: BOT_TOKEN
-      });
-      console.log('🤖 Rodando como BOT');
-    } else {
-      await client.start({
-        phoneNumber: async () => {
-          console.log('📱 Por favor, insira seu número de telefone:');
-          return process.stdin.read();
-        },
-        password: async () => {
-          console.log('🔐 Por favor, insira sua senha 2FA:');
-          return process.stdin.read();
-        },
-        phoneCode: async () => {
-          console.log('📱 Por favor, insira o código de verificação:');
-          return process.stdin.read();
-        },
-        onError: (err) => console.log('❌ Erro:', err)
-      });
-      console.log('👤 Rodando como CONTA DE USUÁRIO');
-    }
+    // SEMPRE usar bot token no EasyPanel
+    await client.start({
+      botAuthToken: BOT_TOKEN
+    });
     
-    console.log('✅ Cliente Telegram conectado!');
+    console.log('✅ Bot conectado com sucesso!');
     console.log('📡 Escutando mensagens...');
     
     // Adicionar event handler APÓS a conexão
