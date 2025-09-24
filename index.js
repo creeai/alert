@@ -37,6 +37,8 @@ if (!API_ID || !API_HASH || !N8N_WEBHOOK_URL) {
 
 console.log('✅ Todas as configurações estão corretas!');
 console.log('👤 Modo CONTA DE USUÁRIO (todas as mensagens)');
+console.log('⚠️ ATENÇÃO: Este modo requer autenticação manual!');
+console.log('📱 Você precisará inserir número de telefone e código de verificação');
 
 // Criar pasta de sessão
 const sessionDir = path.join(__dirname, 'session');
@@ -104,8 +106,6 @@ async function downloadMedia(message) {
 async function start() {
   try {
     console.log('🔌 Conectando ao Telegram...');
-    console.log('⚠️ ATENÇÃO: Este modo requer autenticação manual!');
-    console.log('📱 Você precisará inserir número de telefone e código de verificação');
     
     // SEMPRE usar conta de usuário (não bot)
     await client.start({
