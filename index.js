@@ -52,43 +52,12 @@ async function forwardToChannel(messageId, fromChatId, event, text) {
       // Adicionar prefixo para indicar que é do bot
       const formattedText = `🤖 **Robô Tip**\n\n${text}`;
       
-      // Preparar entidades para manter os links funcionais
-      let entities = [];
-      if (event.entities && event.entities.length > 0) {
-        // Ajustar offset das entidades para o prefixo adicionado
-        const prefixLength = `🤖 Robô Tip\n\n`.length;
-        entities = event.entities.map(entity => ({
-          ...entity,
-          offset: entity.offset + prefixLength
-        }));
-        
-        console.log('🔗 Entidades encontradas:', entities.length);
-        entities.forEach((entity, index) => {
-          console.log(`🔗 Entidade ${index + 1}:`, {
-            className: entity.className,
-            offset: entity.offset,
-            length: entity.length,
-            url: entity.url
-          });
-        });
-      }
+      // Enviar mensagem sem entidades (texto simples)
+      await client.sendMessage(CHANNEL_ID, {
+        message: formattedText
+      });
       
-      // Tentar enviar com entidades primeiro
-      try {
-        await client.sendMessage(CHANNEL_ID, {
-          message: formattedText,
-          parseMode: 'markdown',
-          entities: entities
-        });
-        console.log('✅ Mensagem enviada com entidades!');
-      } catch (error) {
-        console.log('⚠️ Erro com entidades, tentando sem parseMode...');
-        // Fallback: enviar sem parseMode se der erro
-        await client.sendMessage(CHANNEL_ID, {
-          message: formattedText
-        });
-        console.log('✅ Mensagem enviada sem formatação!');
-      }
+      console.log('✅ Mensagem enviada como texto simples!');
       
       console.log('✅ Mensagem reenviada com sucesso!');
       return true;
