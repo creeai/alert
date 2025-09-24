@@ -122,7 +122,21 @@ async function start() {
     if (SESSION_STRING && SESSION_STRING.length > 10) {
       // Usar sessão pré-autenticada
       console.log('🔑 Usando sessão pré-autenticada...');
-      await client.start();
+      await client.start({
+        phoneNumber: async () => {
+          console.log('📱 Número de telefone da sessão: [OCULTO]');
+          return '+5531989354137'; // Número fixo para sessão pré-autenticada
+        },
+        password: async () => {
+          console.log('🔐 Senha 2FA da sessão: [OCULTO]');
+          return ''; // Senha vazia para sessão pré-autenticada
+        },
+        phoneCode: async () => {
+          console.log('📱 Código de verificação da sessão: [OCULTO]');
+          return ''; // Código vazio para sessão pré-autenticada
+        },
+        onError: (err) => console.log('❌ Erro de autenticação:', err)
+      });
     } else {
       // Primeira autenticação (requer entrada manual)
       console.log('⚠️ ATENÇÃO: Primeira autenticação requer entrada manual!');
