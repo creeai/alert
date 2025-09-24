@@ -38,13 +38,24 @@ const client = new TelegramClient(
 async function sendToN8n(payload) {
   try {
     console.log('🚀 Enviando para n8n...');
+    console.log('📡 URL do webhook:', N8N_WEBHOOK_URL);
+    console.log('📦 Payload:', JSON.stringify(payload, null, 2));
+    
     const response = await axios.post(N8N_WEBHOOK_URL, payload, {
-      timeout: 15000
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     console.log(`✅ Enviado ao n8n (status ${response.status})`);
     return response;
   } catch (error) {
     console.error('❌ Erro ao enviar para n8n:', error.message);
+    if (error.response) {
+      console.error('📊 Status:', error.response.status);
+      console.error('📊 Headers:', error.response.headers);
+      console.error('📊 Data:', error.response.data);
+    }
     throw error;
   }
 }
