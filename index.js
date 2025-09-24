@@ -156,11 +156,6 @@ async function start() {
     // Event handler para todas as mensagens
     client.addEventHandler(async (event) => {
       try {
-        // Log de todos os eventos para debug
-        if (event.className && event.className.includes('Message')) {
-          console.log('🔔 Evento de mensagem:', event.className);
-        }
-        
         // Capturar apenas mensagens reais (ignorar status e eventos undefined)
         if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage' || event.className === 'UpdateShortMessage') {
           console.log('📨 Nova mensagem detectada:', event.className);
