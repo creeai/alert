@@ -281,6 +281,8 @@ async function start() {
           console.log(`📝 Texto: ${text ? text.substring(0, 50) + '...' : 'Sem texto'}`);
           
           // Verificar se é mensagem do bot de notificações
+          console.log(`🔍 Verificando bot: senderId=${senderId}, BOT_ID=${BOT_ID}, match=${senderId === BOT_ID}`);
+          
           if (senderId === BOT_ID) {
             console.log('🤖 Mensagem do bot de notificações detectada!');
             
@@ -294,6 +296,8 @@ async function start() {
             } else {
               console.log('⚠️ Falha no encaminhamento, enviando para n8n...');
             }
+          } else {
+            console.log(`📝 Mensagem de outro usuário: ${senderId} (não é o bot ${BOT_ID})`);
           }
           
           const payload = {
