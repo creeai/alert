@@ -103,7 +103,8 @@ async function start() {
       try {
         console.log('🔔 Evento recebido:', event.className);
         
-        if (event.className === 'UpdateNewMessage') {
+        // Capturar mensagens de canais e conversas
+        if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage') {
           const message = event.message;
           if (!message) return;
           
