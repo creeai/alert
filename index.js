@@ -126,16 +126,27 @@ async function start() {
           try {
             chat = await message.getChat();
             sender = await message.getSender();
+            console.log('📊 Chat obtido:', chat.constructor?.name, chat.id);
+            console.log('📊 Sender obtido:', sender?.constructor?.name, sender?.id);
           } catch (error) {
             console.warn('⚠️ Erro ao obter chat/sender:', error.message);
-            // Continuar mesmo com erro
-            chat = { id: 'unknown' };
-            sender = { id: 'unknown' };
+            // Tentar obter informações básicas da mensagem
+            chat = { 
+              id: message.chatId?.toString() || message.peerId?.toString() || 'unknown',
+              constructor: { name: 'UnknownChat' }
+            };
+            sender = { 
+              id: message.senderId?.toString() || 'unknown',
+              username: null
+            };
           }
           
-          if (!chat || !chat.id) {
+          if (!chat || !chat.id || chat.id === 'unknown') {
             console.warn('⚠️ Chat não encontrado, usando valores padrão');
-            chat = { id: 'unknown' };
+            chat = { 
+              id: message.chatId?.toString() || message.peerId?.toString() || 'unknown',
+              constructor: { name: 'UnknownChat' }
+            };
           }
           
           const chatId = chat.id.toString();
