@@ -127,6 +127,12 @@ async function start() {
             console.log('🔍 Mensagem direta detectada - peerId:', event.message?.peerId?.userId);
             console.log('🔍 Mensagem direta detectada - out:', event.message?.out);
             console.log('🔍 Mensagem direta detectada - viaBotId:', event.message?.viaBotId);
+            
+            // Log completo da estrutura para debug
+            if (event.className === 'UpdateShortMessage') {
+              console.log('🔍 Estrutura completa do UpdateShortMessage:');
+              console.log(JSON.stringify(event, null, 2));
+            }
           }
           const message = event.message;
           if (!message) return;
