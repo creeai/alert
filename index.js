@@ -131,13 +131,25 @@ async function start() {
           const message = event.message;
           if (!message) return;
           
-          const chat = await message.getChat();
-          const sender = await message.getSender();
+          // Verificar se chat e sender existem antes de acessar propriedades
+          let chat, sender;
+          try {
+            chat = await message.getChat();
+            sender = await message.getSender();
+          } catch (error) {
+            console.warn('⚠️ Erro ao obter chat/sender:', error.message);
+            return;
+          }
           
-          const chatId = chat.id?.toString();
-          const chatType = chat.constructor.name.toLowerCase();
-          const senderId = sender?.id?.toString();
-          const senderUsername = sender?.username;
+          if (!chat || !chat.id) {
+            console.warn('⚠️ Chat não encontrado ou sem ID');
+            return;
+          }
+          
+          const chatId = chat.id.toString();
+          const chatType = chat.constructor ? chat.constructor.name.toLowerCase() : 'unknown';
+          const senderId = sender?.id ? sender.id.toString() : null;
+          const senderUsername = sender?.username || null;
           
           if (!chatAllowed(parseInt(chatId))) {
             return; // filtrado
