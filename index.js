@@ -17,7 +17,7 @@ const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || '';
 
 console.log(`📊 API_ID: ${API_ID ? '✅ Configurado' : '❌ Não configurado'}`);
 console.log(`📊 API_HASH: ${API_HASH ? '✅ Configurado' : '❌ Não configurado'}`);
-console.log(`📊 BOT_TOKEN: ${BOT_TOKEN ? '✅ Configurado' : '❌ Não configurado'}`);
+console.log(`📊 BOT_TOKEN: ${BOT_TOKEN ? '✅ Configurado (opcional)' : '❌ Não configurado (opcional)'}`);
 console.log(`📊 N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL ? '✅ Configurado' : '❌ Não configurado'}`);
 
 // Controle de chats permitidos
@@ -37,16 +37,7 @@ if (!API_ID || !API_HASH || !N8N_WEBHOOK_URL) {
   process.exit(1);
 }
 
-// OBRIGATÓRIO: Bot Token para funcionar no EasyPanel
-if (!BOT_TOKEN) {
-  console.error('❌ TELEGRAM_BOT_TOKEN é OBRIGATÓRIO para funcionar no EasyPanel');
-  console.error('💡 Crie um bot com @BotFather e configure o token');
-  console.error('📋 Siga as instruções em: BOT_SETUP.md');
-  process.exit(1);
-}
-
 console.log('✅ Todas as configurações estão corretas!');
-console.log('🤖 Modo BOT (recomendado para EasyPanel)');
 
 // Criar pasta de sessão
 const sessionDir = path.join(__dirname, 'session');
@@ -115,15 +106,51 @@ async function start() {
   try {
     console.log('🔌 Conectando ao Telegram...');
     
-    // SEMPRE usar bot token no EasyPanel
-    await client.start({
-      botAuthToken: BOT_TOKEN
-    });
+    if (BOT_TOKEN) {
+      // Modo BOT (limitado a mensagens direcionadas ao bot)
+      console.log('🤖 Modo BOT (apenas mensagens direcionadas ao bot)');
+      await client.start({
+        botAuthToken: BOT_TOKEN
+      });
+    } else {
+      // Modo CONTA DE USUÁRIO (todas as mensagens)
+      console.log('👤 Modo CONTA DE USUÁRIO (todas as mensagens)');
+      console.log('⚠️ ATENÇÃO: Este modo requer autenticação manual!');
+      console.log('📱 Você precisará inserir número de telefone e código de verificação');
+      
+      await client.start({
+        phoneNumber: async () => {
+          console.log('📱 Por favor, insira seu número de telefone (com código do país, ex: +5511999999999):');
+          return new Promise((resolve) => {
+            process.stdin.once('data', (data) => {
+              resolve(data.toString().trim());
+            });
+          });
+        },
+        password: async () => {
+          console.log('🔐 Por favor, insira sua senha 2FA (se tiver):');
+          return new Promise((resolve) => {
+            process.stdin.once('data', (data) => {
+              resolve(data.toString().trim());
+            });
+          });
+        },
+        phoneCode: async () => {
+          console.log('📱 Por favor, insira o código de verificação enviado pelo Telegram:');
+          return new Promise((resolve) => {
+            process.stdin.once('data', (data) => {
+              resolve(data.toString().trim());
+            });
+          });
+        },
+        onError: (err) => console.log('❌ Erro de autenticação:', err)
+      });
+    }
     
-    console.log('✅ Bot conectado com sucesso!');
+    console.log('✅ Cliente Telegram conectado com sucesso!');
     console.log('📡 Escutando mensagens...');
     
-    // Usar uma abordagem mais simples para event handlers
+    // Event handler para todas as mensagens
     client.addEventHandler(async (event) => {
       try {
         // Verificar se é uma mensagem nova
