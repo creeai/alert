@@ -137,7 +137,14 @@ async function start() {
           const message = event.message;
           if (!message) return;
           
-          console.log('📨 Mensagem ID:', message.id);
+          // Para UpdateShortMessage, o ID está em event.id
+          let messageId;
+          if (event.className === 'UpdateShortMessage') {
+            messageId = event.id;
+          } else {
+            messageId = message.id;
+          }
+          console.log('📨 Mensagem ID:', messageId);
           
           // Obter informações do chat e remetente
           let chat, sender;
@@ -145,11 +152,11 @@ async function start() {
             // Para UpdateShortMessage, usar propriedades diretas
             if (event.className === 'UpdateShortMessage') {
               chat = { 
-                id: message.peerId?.userId?.toString() || 'unknown',
+                id: event.userId?.toString() || 'unknown',
                 constructor: { name: 'User' }
               };
               sender = { 
-                id: message.fromId?.userId?.toString() || 'unknown',
+                id: event.userId?.toString() || 'unknown',
                 username: null
               };
               console.log('📊 UpdateShortMessage - Chat ID:', chat.id);
@@ -189,14 +196,28 @@ async function start() {
           
           console.log(`💬 Chat: ${chatId} (${chatType}), Sender: ${senderId} (@${senderUsername})`);
           
-          const text = message.message || null;
+          // Para UpdateShortMessage, o texto está em event.message, não message.message
+          let text;
+          if (event.className === 'UpdateShortMessage') {
+            text = event.message || null;
+          } else {
+            text = message.message || null;
+          }
           // Corrigir problema de data para UpdateShortMessage
           let date;
           try {
-            if (message.date) {
-              date = new Date(message.date * 1000).toISOString();
+            if (event.className === 'UpdateShortMessage') {
+              if (event.date) {
+                date = new Date(event.date * 1000).toISOString();
+              } else {
+                date = new Date().toISOString();
+              }
             } else {
-              date = new Date().toISOString();
+              if (message.date) {
+                date = new Date(message.date * 1000).toISOString();
+              } else {
+                date = new Date().toISOString();
+              }
             }
           } catch (error) {
             console.warn('⚠️ Erro ao processar data:', error.message);
@@ -206,7 +227,7 @@ async function start() {
           console.log(`📝 Texto: ${text ? text.substring(0, 50) + '...' : 'Sem texto'}`);
           
           const payload = {
-            message_id: message.id,
+            message_id: messageId,
             date: date,
             chat_id: chatId,
             chat_type: chatType,
