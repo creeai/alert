@@ -50,7 +50,18 @@ async function forwardToChannel(messageId, fromChatId, event, text) {
       console.log('📤 Reenviando UpdateShortMessage como nova mensagem...');
       
       // Adicionar prefixo para indicar que é do bot
-      const formattedText = `🤖 **Robô Tip**\n\n${text}`;
+      let formattedText = `🤖 **Robô Tip**\n\n${text}`;
+      
+      // Substituir "Bet365" pelo link real das entidades
+      if (event.entities && event.entities.length > 0) {
+        // Encontrar entidade MessageEntityTextUrl
+        const textUrlEntity = event.entities.find(entity => entity.className === 'MessageEntityTextUrl');
+        if (textUrlEntity && textUrlEntity.url) {
+          // Substituir "Bet365" pelo link real
+          formattedText = formattedText.replace('Bet365', textUrlEntity.url);
+          console.log('🔗 Link substituído:', textUrlEntity.url);
+        }
+      }
       
       // Enviar mensagem sem entidades (texto simples)
       await client.sendMessage(CHANNEL_ID, {
