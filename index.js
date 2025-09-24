@@ -118,11 +118,11 @@ async function start() {
         }
         
         // Capturar apenas mensagens reais (ignorar status e eventos undefined)
-        if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage') {
+        if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage' || event.className === 'UpdateShortMessage') {
           console.log('📨 Nova mensagem detectada:', event.className);
           
           // Log para debug de mensagens diretas
-          if (event.className === 'UpdateNewMessage') {
+          if (event.className === 'UpdateNewMessage' || event.className === 'UpdateShortMessage') {
             console.log('🔍 Mensagem direta detectada - fromId:', event.message?.fromId?.userId);
             console.log('🔍 Mensagem direta detectada - peerId:', event.message?.peerId?.userId);
             console.log('🔍 Mensagem direta detectada - out:', event.message?.out);
