@@ -12,6 +12,10 @@ const API_HASH = process.env.TELEGRAM_API_HASH || '';
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || '';
 const SESSION_STRING = process.env.TELEGRAM_SESSION_STRING || '';
 
+// Configurações de encaminhamento
+const BOT_ID = '1694026721'; // ID do bot que envia notificações
+const CHANNEL_ID = '-1002974439945'; // ID do canal de destino
+
 console.log(`📊 API_ID: ${API_ID ? '✅ Configurado' : '❌ Não configurado'}`);
 console.log(`📊 API_HASH: ${API_HASH ? '✅ Configurado' : '❌ Não configurado'}`);
 console.log(`📊 N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL ? '✅ Configurado' : '❌ Não configurado'}`);
@@ -33,6 +37,25 @@ const client = new TelegramClient(
   API_HASH,
   { connectionRetries: 5 }
 );
+
+// Função para encaminhar mensagem para canal
+async function forwardToChannel(messageId, fromChatId) {
+  try {
+    console.log('📤 Encaminhando mensagem para canal...');
+    console.log(`📤 De: ${fromChatId} → Para: ${CHANNEL_ID}`);
+    console.log(`📤 Mensagem ID: ${messageId}`);
+    
+    await client.forwardMessages(CHANNEL_ID, [messageId], {
+      fromPeer: fromChatId
+    });
+    
+    console.log('✅ Mensagem encaminhada com sucesso!');
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao encaminhar mensagem:', error.message);
+    return false;
+  }
+}
 
 // Função para enviar dados ao n8n
 async function sendToN8n(payload) {
@@ -225,6 +248,22 @@ async function start() {
           }
           
           console.log(`📝 Texto: ${text ? text.substring(0, 50) + '...' : 'Sem texto'}`);
+          
+          // Verificar se é mensagem do bot de notificações
+          if (senderId === BOT_ID) {
+            console.log('🤖 Mensagem do bot de notificações detectada!');
+            
+            // Encaminhar para o canal
+            const forwarded = await forwardToChannel(messageId, chatId);
+            
+            if (forwarded) {
+              console.log('✅ Mensagem encaminhada para o canal!');
+              // Não enviar para n8n se encaminhou com sucesso
+              return;
+            } else {
+              console.log('⚠️ Falha no encaminhamento, enviando para n8n...');
+            }
+          }
           
           const payload = {
             message_id: messageId,
