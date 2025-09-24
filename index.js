@@ -123,62 +123,64 @@ async function start() {
     console.log('✅ Bot conectado com sucesso!');
     console.log('📡 Escutando mensagens...');
     
-    // Adicionar event handler APÓS a conexão
+    // Usar uma abordagem mais simples para event handlers
     client.addEventHandler(async (event) => {
       try {
-        const message = event.message;
-        if (!message) return;
-        
-        const chat = await message.getChat();
-        const sender = await message.getSender();
-        
-        const chatId = chat.id?.toString();
-        const chatType = chat.constructor.name.toLowerCase();
-        const senderId = sender?.id?.toString();
-        const senderUsername = sender?.username;
-        
-        if (!chatAllowed(parseInt(chatId))) {
-          return; // filtrado
-        }
-        
-        const text = message.message || null;
-        const date = new Date(message.date * 1000).toISOString();
-        
-        const basePayload = {
-          message_id: message.id,
-          date: date,
-          chat_id: chatId,
-          chat_type: chatType,
-          sender_id: senderId,
-          sender_username: senderUsername,
-          text: text,
-          has_media: !!message.media,
-          raw: {
-            reply_to_msg_id: message.replyTo?.replyToMsgId,
-            fwd_from: !!message.fwdFrom,
-            via_bot_id: message.viaBotId,
-            entities: message.entities || []
+        // Verificar se é uma mensagem nova
+        if (event.className === 'UpdateNewMessage') {
+          const message = event.message;
+          if (!message) return;
+          
+          const chat = await message.getChat();
+          const sender = await message.getSender();
+          
+          const chatId = chat.id?.toString();
+          const chatType = chat.constructor.name.toLowerCase();
+          const senderId = sender?.id?.toString();
+          const senderUsername = sender?.username;
+          
+          if (!chatAllowed(parseInt(chatId))) {
+            return; // filtrado
           }
-        };
-        
-        // Baixar mídia se necessário
-        let mediaBuffer = null;
-        let mediaName = null;
-        if (message.media && FORWARD_MEDIA) {
-          mediaBuffer = await downloadMedia(message);
-          if (mediaBuffer) {
-            mediaName = 'media';
+          
+          const text = message.message || null;
+          const date = new Date(message.date * 1000).toISOString();
+          
+          const basePayload = {
+            message_id: message.id,
+            date: date,
+            chat_id: chatId,
+            chat_type: chatType,
+            sender_id: senderId,
+            sender_username: senderUsername,
+            text: text,
+            has_media: !!message.media,
+            raw: {
+              reply_to_msg_id: message.replyTo?.replyToMsgId,
+              fwd_from: !!message.fwdFrom,
+              via_bot_id: message.viaBotId,
+              entities: message.entities || []
+            }
+          };
+          
+          // Baixar mídia se necessário
+          let mediaBuffer = null;
+          let mediaName = null;
+          if (message.media && FORWARD_MEDIA) {
+            mediaBuffer = await downloadMedia(message);
+            if (mediaBuffer) {
+              mediaName = 'media';
+            }
           }
+          
+          // Enviar para n8n
+          const response = await sendToN8n(basePayload, mediaBuffer, mediaName);
+          console.log(`✅ Enviado ao n8n (status ${response.status})`);
         }
-        
-        // Enviar para n8n
-        const response = await sendToN8n(basePayload, mediaBuffer, mediaName);
-        console.log(`✅ Enviado ao n8n (status ${response.status})`);
-        
       } catch (error) {
         console.error('❌ Erro ao processar mensagem:', error.message);
       }
-    }, new Api.UpdateNewMessage({}));
+    });
     
     // Manter o processo rodando
     process.on('SIGINT', async () => {
