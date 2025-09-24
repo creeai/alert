@@ -52,9 +52,21 @@ async function forwardToChannel(messageId, fromChatId, event, text) {
       // Adicionar prefixo para indicar que é do bot
       const formattedText = `🤖 <b>Robô Tip</b>\n\n${text}`;
       
+      // Preparar entidades para manter os links funcionais
+      let entities = [];
+      if (event.entities && event.entities.length > 0) {
+        // Ajustar offset das entidades para o prefixo adicionado
+        const prefixLength = `🤖 Robô Tip\n\n`.length;
+        entities = event.entities.map(entity => ({
+          ...entity,
+          offset: entity.offset + prefixLength
+        }));
+      }
+      
       await client.sendMessage(CHANNEL_ID, {
         message: formattedText,
-        parseMode: 'html'
+        parseMode: 'html',
+        entities: entities
       });
       
       console.log('✅ Mensagem reenviada com sucesso!');
