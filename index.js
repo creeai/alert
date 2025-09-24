@@ -112,20 +112,13 @@ async function start() {
     // Event handler para todas as mensagens
     client.addEventHandler(async (event) => {
       try {
-        console.log('🔔 Evento recebido:', event.className);
-        
-        // Log detalhado para debug
+        // Capturar apenas mensagens reais (ignorar status e eventos undefined)
         if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage') {
-          console.log('📨 Evento de mensagem detectado:', event.className);
-          console.log('📊 Evento completo:', JSON.stringify(event, null, 2));
-        }
-        
-        // Capturar mensagens de canais e conversas
-        if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage') {
+          console.log('📨 Nova mensagem detectada:', event.className);
           const message = event.message;
           if (!message) return;
           
-          console.log('📨 Nova mensagem recebida:', message.id);
+          console.log('📨 Mensagem ID:', message.id);
           
           // Obter informações do chat e remetente
           let chat, sender;
