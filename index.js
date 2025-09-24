@@ -50,11 +50,11 @@ async function forwardToChannel(messageId, fromChatId, event, text) {
       console.log('📤 Reenviando UpdateShortMessage como nova mensagem...');
       
       // Adicionar prefixo para indicar que é do bot
-      const formattedText = `🤖 **Robô Tip**\n\n${text}`;
+      const formattedText = `🤖 <b>Robô Tip</b>\n\n${text}`;
       
       await client.sendMessage(CHANNEL_ID, {
         message: formattedText,
-        parseMode: 'markdown'
+        parseMode: 'html'
       });
       
       console.log('✅ Mensagem reenviada com sucesso!');
