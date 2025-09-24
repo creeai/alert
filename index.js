@@ -117,12 +117,14 @@ async function start() {
             sender = await message.getSender();
           } catch (error) {
             console.warn('⚠️ Erro ao obter chat/sender:', error.message);
-            return;
+            // Continuar mesmo com erro
+            chat = { id: 'unknown' };
+            sender = { id: 'unknown' };
           }
           
           if (!chat || !chat.id) {
-            console.warn('⚠️ Chat não encontrado');
-            return;
+            console.warn('⚠️ Chat não encontrado, usando valores padrão');
+            chat = { id: 'unknown' };
           }
           
           const chatId = chat.id.toString();
