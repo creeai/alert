@@ -114,6 +114,12 @@ async function start() {
       try {
         console.log('🔔 Evento recebido:', event.className);
         
+        // Log detalhado para debug
+        if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage') {
+          console.log('📨 Evento de mensagem detectado:', event.className);
+          console.log('📊 Evento completo:', JSON.stringify(event, null, 2));
+        }
+        
         // Capturar mensagens de canais e conversas
         if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage') {
           const message = event.message;
