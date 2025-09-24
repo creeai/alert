@@ -73,11 +73,22 @@ async function forwardToChannel(messageId, fromChatId, event, text) {
         });
       }
       
-      await client.sendMessage(CHANNEL_ID, {
-        message: formattedText,
-        parseMode: 'markdown',
-        entities: entities
-      });
+      // Tentar enviar com entidades primeiro
+      try {
+        await client.sendMessage(CHANNEL_ID, {
+          message: formattedText,
+          parseMode: 'markdown',
+          entities: entities
+        });
+        console.log('✅ Mensagem enviada com entidades!');
+      } catch (error) {
+        console.log('⚠️ Erro com entidades, tentando sem parseMode...');
+        // Fallback: enviar sem parseMode se der erro
+        await client.sendMessage(CHANNEL_ID, {
+          message: formattedText
+        });
+        console.log('✅ Mensagem enviada sem formatação!');
+      }
       
       console.log('✅ Mensagem reenviada com sucesso!');
       return true;
