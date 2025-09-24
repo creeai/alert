@@ -13,10 +13,12 @@ console.log('📋 Verificando configurações...');
 const API_ID = parseInt(process.env.TELEGRAM_API_ID || '0');
 const API_HASH = process.env.TELEGRAM_API_HASH || '';
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || '';
+const SESSION_STRING = process.env.TELEGRAM_SESSION_STRING || '';
 
 console.log(`📊 API_ID: ${API_ID ? '✅ Configurado' : '❌ Não configurado'}`);
 console.log(`📊 API_HASH: ${API_HASH ? '✅ Configurado' : '❌ Não configurado'}`);
 console.log(`📊 N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL ? '✅ Configurado' : '❌ Não configurado'}`);
+console.log(`📊 SESSION_STRING: ${SESSION_STRING ? '✅ Configurado' : '❌ Não configurado'}`);
 
 // Controle de chats permitidos
 const allowChatsEnv = process.env.ALLOW_CHATS || '*';
@@ -37,8 +39,6 @@ if (!API_ID || !API_HASH || !N8N_WEBHOOK_URL) {
 
 console.log('✅ Todas as configurações estão corretas!');
 console.log('👤 Modo CONTA DE USUÁRIO (todas as mensagens)');
-console.log('⚠️ ATENÇÃO: Este modo requer autenticação manual!');
-console.log('📱 Você precisará inserir número de telefone e código de verificação');
 
 // Criar pasta de sessão
 const sessionDir = path.join(__dirname, 'session');
@@ -48,7 +48,7 @@ if (!fs.existsSync(sessionDir)) {
 
 // Inicializar cliente Telegram
 const client = new TelegramClient(
-  new StringSession(''), // Sessão vazia para começar
+  new StringSession(SESSION_STRING), // Usar sessão pré-autenticada
   API_ID,
   API_HASH,
   { connectionRetries: 5 }
@@ -107,34 +107,50 @@ async function start() {
   try {
     console.log('🔌 Conectando ao Telegram...');
     
-    // SEMPRE usar conta de usuário (não bot)
-    await client.start({
-      phoneNumber: async () => {
-        console.log('📱 Por favor, insira seu número de telefone (com código do país, ex: +5511999999999):');
-        return new Promise((resolve) => {
-          process.stdin.once('data', (data) => {
-            resolve(data.toString().trim());
+    if (SESSION_STRING) {
+      // Usar sessão pré-autenticada
+      console.log('🔑 Usando sessão pré-autenticada...');
+      await client.start();
+    } else {
+      // Primeira autenticação (requer entrada manual)
+      console.log('⚠️ ATENÇÃO: Primeira autenticação requer entrada manual!');
+      console.log('📱 Você precisará inserir número de telefone e código de verificação');
+      console.log('💡 Após autenticação, salve a SESSION_STRING para uso futuro');
+      
+      await client.start({
+        phoneNumber: async () => {
+          console.log('📱 Por favor, insira seu número de telefone (com código do país, ex: +5511999999999):');
+          return new Promise((resolve) => {
+            process.stdin.once('data', (data) => {
+              resolve(data.toString().trim());
+            });
           });
-        });
-      },
-      password: async () => {
-        console.log('🔐 Por favor, insira sua senha 2FA (se tiver):');
-        return new Promise((resolve) => {
-          process.stdin.once('data', (data) => {
-            resolve(data.toString().trim());
+        },
+        password: async () => {
+          console.log('🔐 Por favor, insira sua senha 2FA (se tiver):');
+          return new Promise((resolve) => {
+            process.stdin.once('data', (data) => {
+              resolve(data.toString().trim());
+            });
           });
-        });
-      },
-      phoneCode: async () => {
-        console.log('📱 Por favor, insira o código de verificação enviado pelo Telegram:');
-        return new Promise((resolve) => {
-          process.stdin.once('data', (data) => {
-            resolve(data.toString().trim());
+        },
+        phoneCode: async () => {
+          console.log('📱 Por favor, insira o código de verificação enviado pelo Telegram:');
+          return new Promise((resolve) => {
+            process.stdin.once('data', (data) => {
+              resolve(data.toString().trim());
+            });
           });
-        });
-      },
-      onError: (err) => console.log('❌ Erro de autenticação:', err)
-    });
+        },
+        onError: (err) => console.log('❌ Erro de autenticação:', err)
+      });
+      
+      // Salvar sessão para uso futuro
+      const sessionString = client.session.save();
+      console.log('🔑 SESSION_STRING para uso futuro:');
+      console.log(`TELEGRAM_SESSION_STRING=${sessionString}`);
+      console.log('💡 Adicione esta variável ao EasyPanel para autenticação automática');
+    }
     
     console.log('✅ Cliente Telegram conectado com sucesso!');
     console.log('📡 Escutando mensagens...');
