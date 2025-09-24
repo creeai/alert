@@ -112,6 +112,11 @@ async function start() {
     // Event handler para todas as mensagens
     client.addEventHandler(async (event) => {
       try {
+        // Log de todos os eventos para debug
+        if (event.className && event.className.includes('Message')) {
+          console.log('🔔 Evento de mensagem:', event.className);
+        }
+        
         // Capturar apenas mensagens reais (ignorar status e eventos undefined)
         if (event.className === 'UpdateNewMessage' || event.className === 'UpdateNewChannelMessage') {
           console.log('📨 Nova mensagem detectada:', event.className);
@@ -120,6 +125,8 @@ async function start() {
           if (event.className === 'UpdateNewMessage') {
             console.log('🔍 Mensagem direta detectada - fromId:', event.message?.fromId?.userId);
             console.log('🔍 Mensagem direta detectada - peerId:', event.message?.peerId?.userId);
+            console.log('🔍 Mensagem direta detectada - out:', event.message?.out);
+            console.log('🔍 Mensagem direta detectada - viaBotId:', event.message?.viaBotId);
           }
           const message = event.message;
           if (!message) return;
