@@ -6,11 +6,19 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+console.log('🚀 Iniciando Telegram n8n Bridge...');
+console.log('📋 Verificando configurações...');
+
 // Configurações
 const API_ID = parseInt(process.env.TELEGRAM_API_ID || '0');
 const API_HASH = process.env.TELEGRAM_API_HASH || '';
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
 const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || '';
+
+console.log(`📊 API_ID: ${API_ID ? '✅ Configurado' : '❌ Não configurado'}`);
+console.log(`📊 API_HASH: ${API_HASH ? '✅ Configurado' : '❌ Não configurado'}`);
+console.log(`📊 BOT_TOKEN: ${BOT_TOKEN ? '✅ Configurado' : '❌ Não configurado'}`);
+console.log(`📊 N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL ? '✅ Configurado' : '❌ Não configurado'}`);
 
 // Controle de chats permitidos
 const allowChatsEnv = process.env.ALLOW_CHATS || '*';
@@ -33,8 +41,12 @@ if (!API_ID || !API_HASH || !N8N_WEBHOOK_URL) {
 if (!BOT_TOKEN) {
   console.error('❌ TELEGRAM_BOT_TOKEN é OBRIGATÓRIO para funcionar no EasyPanel');
   console.error('💡 Crie um bot com @BotFather e configure o token');
+  console.error('📋 Siga as instruções em: BOT_SETUP.md');
   process.exit(1);
 }
+
+console.log('✅ Todas as configurações estão corretas!');
+console.log('🤖 Modo BOT (recomendado para EasyPanel)');
 
 // Criar pasta de sessão
 const sessionDir = path.join(__dirname, 'session');
@@ -101,8 +113,7 @@ async function downloadMedia(message) {
 // Função principal
 async function start() {
   try {
-    console.log('🚀 Iniciando Telegram n8n Bridge...');
-    console.log('🤖 Modo BOT (recomendado para EasyPanel)');
+    console.log('🔌 Conectando ao Telegram...');
     
     // SEMPRE usar bot token no EasyPanel
     await client.start({
