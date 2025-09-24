@@ -136,10 +136,25 @@ async function start() {
           // Obter informações do chat e remetente
           let chat, sender;
           try {
-            chat = await message.getChat();
-            sender = await message.getSender();
-            console.log('📊 Chat obtido:', chat.constructor?.name, chat.id);
-            console.log('📊 Sender obtido:', sender?.constructor?.name, sender?.id);
+            // Para UpdateShortMessage, usar propriedades diretas
+            if (event.className === 'UpdateShortMessage') {
+              chat = { 
+                id: message.peerId?.userId?.toString() || 'unknown',
+                constructor: { name: 'User' }
+              };
+              sender = { 
+                id: message.fromId?.userId?.toString() || 'unknown',
+                username: null
+              };
+              console.log('📊 UpdateShortMessage - Chat ID:', chat.id);
+              console.log('📊 UpdateShortMessage - Sender ID:', sender.id);
+            } else {
+              // Para outras mensagens, usar métodos normais
+              chat = await message.getChat();
+              sender = await message.getSender();
+              console.log('📊 Chat obtido:', chat.constructor?.name, chat.id);
+              console.log('📊 Sender obtido:', sender?.constructor?.name, sender?.id);
+            }
           } catch (error) {
             console.warn('⚠️ Erro ao obter chat/sender:', error.message);
             // Tentar obter informações básicas da mensagem
@@ -169,7 +184,18 @@ async function start() {
           console.log(`💬 Chat: ${chatId} (${chatType}), Sender: ${senderId} (@${senderUsername})`);
           
           const text = message.message || null;
-          const date = new Date(message.date * 1000).toISOString();
+          // Corrigir problema de data para UpdateShortMessage
+          let date;
+          try {
+            if (message.date) {
+              date = new Date(message.date * 1000).toISOString();
+            } else {
+              date = new Date().toISOString();
+            }
+          } catch (error) {
+            console.warn('⚠️ Erro ao processar data:', error.message);
+            date = new Date().toISOString();
+          }
           
           console.log(`📝 Texto: ${text ? text.substring(0, 50) + '...' : 'Sem texto'}`);
           
