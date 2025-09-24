@@ -17,7 +17,14 @@
     "domelementtype": "^3.0.0",
     "domhandler": "^5.0.0",
     "domutils": "^3.0.0",
-    "entities": "^4.0.0"
+    "entities": "^4.0.0",
+    "ts-custom-error": "^4.2.0",
+    "big-integer": "^1.6.51",
+    "big.js": "^6.2.1",
+    "crypto": "^1.0.1",
+    "socks": "^2.7.1",
+    "websocket": "^1.0.34",
+    "ws": "^8.14.2"
   },
   "engines": {
     "node": ">=18.0.0"
