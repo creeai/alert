@@ -39,18 +39,34 @@ const client = new TelegramClient(
 );
 
 // Função para encaminhar mensagem para canal
-async function forwardToChannel(messageId, fromChatId) {
+async function forwardToChannel(messageId, fromChatId, event, text) {
   try {
     console.log('📤 Encaminhando mensagem para canal...');
     console.log(`📤 De: ${fromChatId} → Para: ${CHANNEL_ID}`);
     console.log(`📤 Mensagem ID: ${messageId}`);
     
-    await client.forwardMessages(CHANNEL_ID, [messageId], {
-      fromPeer: fromChatId
-    });
-    
-    console.log('✅ Mensagem encaminhada com sucesso!');
-    return true;
+    // Para UpdateShortMessage, reenviar como nova mensagem
+    if (event.className === 'UpdateShortMessage') {
+      console.log('📤 Reenviando UpdateShortMessage como nova mensagem...');
+      
+      await client.sendMessage(CHANNEL_ID, {
+        message: text,
+        parseMode: 'html'
+      });
+      
+      console.log('✅ Mensagem reenviada com sucesso!');
+      return true;
+    } else {
+      // Para outras mensagens, usar forwardMessages
+      const chatId = fromChatId.startsWith('-') ? fromChatId : `-${fromChatId}`;
+      
+      await client.forwardMessages(CHANNEL_ID, [messageId], {
+        fromPeer: chatId
+      });
+      
+      console.log('✅ Mensagem encaminhada com sucesso!');
+      return true;
+    }
   } catch (error) {
     console.error('❌ Erro ao encaminhar mensagem:', error.message);
     return false;
@@ -254,7 +270,7 @@ async function start() {
             console.log('🤖 Mensagem do bot de notificações detectada!');
             
             // Encaminhar para o canal
-            const forwarded = await forwardToChannel(messageId, chatId);
+            const forwarded = await forwardToChannel(messageId, chatId, event, text);
             
             if (forwarded) {
               console.log('✅ Mensagem encaminhada para o canal!');
