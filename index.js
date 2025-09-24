@@ -39,6 +39,7 @@ if (!API_ID || !API_HASH || !N8N_WEBHOOK_URL) {
 
 console.log('✅ Todas as configurações estão corretas!');
 console.log('👤 Modo CONTA DE USUÁRIO (todas as mensagens)');
+console.log(`🔍 Filtro de chats: ${ALLOW_CHATS ? ALLOW_CHATS.join(', ') : 'TODOS'}`);
 
 // Criar pasta de sessão
 const sessionDir = path.join(__dirname, 'session');
@@ -46,13 +47,24 @@ if (!fs.existsSync(sessionDir)) {
   fs.mkdirSync(sessionDir, { recursive: true });
 }
 
-// Inicializar cliente Telegram
-const client = new TelegramClient(
-  new StringSession(SESSION_STRING), // Usar sessão pré-autenticada
-  API_ID,
-  API_HASH,
-  { connectionRetries: 5 }
-);
+// Inicializar cliente Telegram com tratamento de erro
+let client;
+try {
+  client = new TelegramClient(
+    new StringSession(SESSION_STRING || ''), // Usar string vazia se inválida
+    API_ID,
+    API_HASH,
+    { connectionRetries: 5 }
+  );
+} catch (error) {
+  console.warn('⚠️ SESSION_STRING inválida, usando sessão vazia');
+  client = new TelegramClient(
+    new StringSession(''), // Sessão vazia
+    API_ID,
+    API_HASH,
+    { connectionRetries: 5 }
+  );
+}
 
 // Função para verificar se chat é permitido
 function chatAllowed(chatId) {
@@ -107,7 +119,7 @@ async function start() {
   try {
     console.log('🔌 Conectando ao Telegram...');
     
-    if (SESSION_STRING) {
+    if (SESSION_STRING && SESSION_STRING.length > 10) {
       // Usar sessão pré-autenticada
       console.log('🔑 Usando sessão pré-autenticada...');
       await client.start();
@@ -158,10 +170,17 @@ async function start() {
     // Event handler para todas as mensagens
     client.addEventHandler(async (event) => {
       try {
+        console.log('🔔 Evento recebido:', event.className);
+        
         // Verificar se é uma mensagem nova
         if (event.className === 'UpdateNewMessage') {
           const message = event.message;
-          if (!message) return;
+          if (!message) {
+            console.log('⚠️ Mensagem vazia, ignorando');
+            return;
+          }
+          
+          console.log('📨 Nova mensagem recebida:', message.id);
           
           // Verificar se chat e sender existem antes de acessar propriedades
           let chat, sender;
@@ -183,12 +202,17 @@ async function start() {
           const senderId = sender?.id ? sender.id.toString() : null;
           const senderUsername = sender?.username || null;
           
+          console.log(`💬 Chat: ${chatId} (${chatType}), Sender: ${senderId} (@${senderUsername})`);
+          
           if (!chatAllowed(parseInt(chatId))) {
+            console.log('🚫 Chat filtrado:', chatId);
             return; // filtrado
           }
           
           const text = message.message || null;
           const date = new Date(message.date * 1000).toISOString();
+          
+          console.log(`📝 Texto: ${text ? text.substring(0, 50) + '...' : 'Sem texto'}`);
           
           const basePayload = {
             message_id: message.id,
@@ -211,13 +235,16 @@ async function start() {
           let mediaBuffer = null;
           let mediaName = null;
           if (message.media && FORWARD_MEDIA) {
+            console.log('📎 Baixando mídia...');
             mediaBuffer = await downloadMedia(message);
             if (mediaBuffer) {
               mediaName = 'media';
+              console.log('✅ Mídia baixada com sucesso');
             }
           }
           
           // Enviar para n8n
+          console.log('🚀 Enviando para n8n...');
           const response = await sendToN8n(basePayload, mediaBuffer, mediaName);
           console.log(`✅ Enviado ao n8n (status ${response.status})`);
         }
