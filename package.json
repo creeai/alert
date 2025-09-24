@@ -18,7 +18,7 @@
     "domhandler": "^5.0.3",
     "domutils": "^3.0.1",
     "entities": "^4.5.0",
-    "ts-custom-error": "^3.2.1",
+    "ts-custom-error": "^3.1.1",
     "big-integer": "^1.6.51",
     "socks": "^2.7.1",
     "websocket": "^1.0.34",
