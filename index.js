@@ -61,6 +61,16 @@ async function forwardToChannel(messageId, fromChatId, event, text) {
           ...entity,
           offset: entity.offset + prefixLength
         }));
+        
+        console.log('🔗 Entidades encontradas:', entities.length);
+        entities.forEach((entity, index) => {
+          console.log(`🔗 Entidade ${index + 1}:`, {
+            className: entity.className,
+            offset: entity.offset,
+            length: entity.length,
+            url: entity.url
+          });
+        });
       }
       
       await client.sendMessage(CHANNEL_ID, {
