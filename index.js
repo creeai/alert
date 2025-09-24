@@ -45,19 +45,21 @@ async function forwardToChannel(messageId, fromChatId, event, text) {
     console.log(`📤 De: ${fromChatId} → Para: ${CHANNEL_ID}`);
     console.log(`📤 Mensagem ID: ${messageId}`);
     
-    // Para UpdateShortMessage, reenviar como nova mensagem
+    // Para UpdateShortMessage, usar o chatId do usuário diretamente
     if (event.className === 'UpdateShortMessage') {
-      console.log('📤 Reenviando UpdateShortMessage como nova mensagem...');
+      console.log('📤 Encaminhando UpdateShortMessage manualmente...');
       
-      await client.sendMessage(CHANNEL_ID, {
-        message: text,
-        parseMode: 'html'
+      // Usar o userId como chatId para encaminhamento
+      const userChatId = parseInt(fromChatId);
+      
+      await client.forwardMessages(CHANNEL_ID, [messageId], {
+        fromPeer: userChatId
       });
       
-      console.log('✅ Mensagem reenviada com sucesso!');
+      console.log('✅ Mensagem encaminhada com sucesso!');
       return true;
     } else {
-      // Para outras mensagens, usar forwardMessages
+      // Para outras mensagens, usar forwardMessages normal
       const chatId = fromChatId.startsWith('-') ? fromChatId : `-${fromChatId}`;
       
       await client.forwardMessages(CHANNEL_ID, [messageId], {
